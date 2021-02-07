@@ -52,10 +52,10 @@ if __name__ == "__main__":
     loop.close()
 
 
-endpoints = [1,2,2,3]
-
-queue_list = []
-for i, item in enumerate(endpoints):
-    queue_list.append(aioprocessing.AioQueue)
-
-print(queue_list)
+# endpoints = [1,2,2,3]
+#
+# queue_list = []
+# for i, item in enumerate(endpoints):
+#     queue_list.append(aioprocessing.AioQueue)
+#
+# print(queue_list)

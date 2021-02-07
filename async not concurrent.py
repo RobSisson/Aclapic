@@ -1,5 +1,5 @@
 import asyncio, random, aiohttp
-import janus
+# import janus
 
 async def process(token):
     return print(token*token)
