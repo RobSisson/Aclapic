@@ -137,28 +137,19 @@ def Create_URL(
 
     # print('api abo')
 
-    if api[4] != None:
-        print('kwards below')
-        print(api[4])
+    if api[4] != None: # api[4] is the column containing additional {positions:key+value,} including auth keys
         kwargs = api[4]
-        print('len below')
-        print(len(kwargs)+1)
-        for i in range(len(kwargs)+1):
-            # print('item bel')
+        for i in range(len(kwargs)+len(endpoint)): # for number of additional values + 1 (since the total string will include the key+values and the endpoint
             try:
-                # print('kwarg i')
-                # print(kwargs[i])
-                url.append(kwargs[i])
+                url.append(kwargs[i]) # append key+value that holds position i
 
             except:
-                print('Endpoint Added')
-                url.append(endpoint)
+                url.append(endpoint) # if not present, append endpoint
 
-        url = ''.join(url)
+        url = ''.join(url) # list -> string
     else:
-        print('Kwargs is empty, creating url without additional arguments')
         url=str(api[0])+str(endpoint)
-        print(url)
+        # print(url)
 
 
     return url
@@ -238,22 +229,47 @@ Create_Next_URLs(Compile_Api_List(apis=apis,
                                        apis_to_call=apis_to_call)
                                                          )
 
-#
-#
-#
-# print(
-#     Create_Next_URL(
-#
-#     Compile_Endpoint_Array(endpoints=endpoints,
-#                            keys=keys,
-#                            limits=limits,
-#                            periods=period),
-#
-#     Compile_Suffix_Array(suffixes=suffixes,
-#                          endpoints_to_call=end_points_to_call),
-#                )
-#       )
+import asyncio
+import aiohttp
+from aiohttp import ClientSession, ClientConnectorError
 
-[['api1', ['1', '2', '3'], 5, 60, None],
- ['api2', ['1', '2'], 10, 100, [{'api2 position 1': 'api2 key 1api2 value 1', 'api2 position 2': 'api2 key 2api2 value 2'}]],
- ['api3', ['2', '3'], 20, 30, [{'api3 position 1': 'api3 key 1api3 value 1'}]]]
+async def fetch_html(url: str, session: ClientSession, id, **kwargs) -> tuple:
+    try:
+        resp = await session.request(method="GET", url=url, **kwargs)
+    except ClientConnectorError:
+        return (id, url, 404)
+    return (id, url, resp.text)
+
+async def make_requests(urls: list, **kwargs) -> None:
+    async with ClientSession() as session:
+        tasks = []
+        for i, url in enumerate(urls):
+            tasks.append(
+                fetch_html(url=url, session=session, id=i, **kwargs)
+            )
+        results = await asyncio.gather(*tasks)
+
+    for result in results:
+        print(f'{result[0]} - {str(result[1])} - {str(result[2])} ')
+
+if __name__ == "__main__":
+    import pathlib
+    import sys
+
+    if sys.version_info[0] == 3 and sys.version_info[1]>=8 and sys.platform.startswith('win'):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    assert sys.version_info >= (3, 7), "Script requires Python 3.7+."
+    here = pathlib.Path(__file__).parent
+
+    urls=['https://1.1.1.1/',
+          'http://automationpractice.com/',
+          'http://automationpractice.com/',
+          'http://automationpractice.com/',
+          'http://automationpractice.com/',
+          'http://automationpractice.com/',
+          'http://automationpractice.com/',
+          'http://automationpractice.com/']
+
+
+    asyncio.run(make_requests(urls=urls))
