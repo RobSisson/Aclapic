@@ -158,7 +158,7 @@ def Create_Next_URLs(
         api_list,
         endpoint_list,
 ):
-    example_queue = []
+    url_list = []
     for i, endpoint in enumerate(endpoint_list):
 
         # print(endpoint[2])
@@ -169,11 +169,8 @@ def Create_Next_URLs(
 
                 if api_to_call[0] == 0:
                     api_number = api_to_call[1] # this would be the number of the api to call, not the api itself
-                    ep = endpoint[0]
 
-
-                    example_queue.append(Create_URL(api_list[api_number], endpoint[0]))
-
+                    url_list.append(Create_URL(api_list[api_number], endpoint[0]))
 
                     api_to_call[1] = 1
                     break
@@ -184,50 +181,8 @@ def Create_Next_URLs(
                 if len(endpoint[1]) <= done_count:
                     print("All Api's for " + str(endpoint[0] + ' searched, and no result found'))
 
-    return print(example_queue)
+    return url_list
 
-
-
-
-
-
-
-
-# print('Compile Endpoint list below')
-# print(Compile_Endpoint_List(endpoints=suffixes,
-#                            apis_to_call=end_points_to_call))
-
-
-endpoints = ['endpoint 1 - ', 'endpoint 2 - ', 'endpoint 3 - ','endpoint 4 - ']
-apis_to_call = [[0,1],[2],[0,1,2],[1]]
-
-apis = ['api 1 - ','api 2 - ','api 3 -']
-filters = [['1','2','3'],['1','2'],['2','3']]
-limits = [5,10,20]
-period = [60,100,30]
-keys = [None,[' api 2 key 1:', ' api 2 key 2:'], ' api 3 key 1:']
-values = [None,[' api 2 value 1 - ', ' api 2 value 2 - '], ' api 3 value 1 - ']
-positions = [None,[2, 0], 1]
-
-# api 1 - endpoint 1
-# api 3 - endpoint 2 - # api 3 key 1: api 3 value 1
-# api 1 - endpoint 3
-# api 2 - api2 key 2: api2 value 2 - endpoint4 - # api2 key 1: api2 value 1
-
-
-# print('Compile Api List below')
-# print()
-
-Create_Next_URLs(Compile_Api_List(apis=apis,
-                                  filters=filters,
-                                  limits=limits,
-                                  periods=period,
-                                  keys = keys,
-                                  values=values,
-                                  positions=positions),
-                 Compile_Endpoint_List(endpoints=endpoints,
-                                       apis_to_call=apis_to_call)
-                                                         )
 
 import asyncio
 import aiohttp
@@ -240,17 +195,18 @@ async def fetch_html(url: str, session: ClientSession, id, **kwargs) -> tuple:
         return (id, url, 404)
     return (id, url, resp.text)
 
-async def make_requests(urls: list, **kwargs) -> None:
+async def make_requests(urls: list, **kwargs):
+
     async with ClientSession() as session:
+        results = []
         tasks = []
         for i, url in enumerate(urls):
             tasks.append(
                 fetch_html(url=url, session=session, id=i, **kwargs)
             )
-        results = await asyncio.gather(*tasks)
+        responses = await asyncio.gather(*tasks)
 
-    for result in results:
-        print(f'{result[0]} - {str(result[1])} - {str(result[2])} ')
+    return responses
 
 if __name__ == "__main__":
     import pathlib
@@ -272,4 +228,56 @@ if __name__ == "__main__":
           'http://automationpractice.com/']
 
 
-    asyncio.run(make_requests(urls=urls))
+    print(asyncio.run(make_requests(urls=urls)))
+    print('lemony snicket just got a wicket!')
+    print(asyncio.run(make_requests(urls=urls))[0])
+
+async def DOI_List_to_Result(
+        endpoint_list,
+        apis_to_call = None, # add info in format: [[0, 1], [2], [0, 1, 2]...] Using the value of the API, leave blank for all
+):
+
+    if apis_to_call == True:
+        apis_to_call = []
+
+        for i, item in enumerate(endpoint_list):
+            apis_to_call.append()
+
+    apis_to_call=[[0, 1, 2], [2], [0, 1, 2], [1]]
+
+    apis=['https://api.semanticscholar.org/v1/paper/',
+          'https://api.crossref.org/v1/works/',
+          'https://doaj.org/api/v2/search/articles/doi%3A']
+    filters=[['abstract'],
+             ['abstract'],
+             ['abstract']]
+    limits=[100, 50, 2]
+    period=[300, 100, 1]
+    keys=[None, '&mailto=', None]
+    values=[None, 'robert.b.sisson@gmail.com', None]
+    positions=[None, 1, None]
+
+    if apis_to_call == None:
+        apis_to_call = []
+        api_values = []
+
+        for i, api in enumerate(apis):
+            api_values.append(i)
+
+        for i, item in enumerate(endpoint_list):
+            apis_to_call.append(api_values)
+
+        print(apis_to_call)
+
+
+
+    url_list = Create_Next_URLs(Compile_Api_List(apis=apis,
+                                                 filters=filters,
+                                                 limits=limits,
+                                                 periods=period,
+                                                 keys=keys,
+                                                 values=values,
+                                                 positions=positions),
+                                Compile_Endpoint_List(endpoints=endpoint_list,
+                                                      apis_to_call=apis_to_call)
+                                )
