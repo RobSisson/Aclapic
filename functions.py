@@ -1,8 +1,7 @@
 import asyncio
+from aiohttp import ClientSession, ClientConnectorError
+import time
 
-async def queue():
-
-    return
 
 def Compile_Endpoint_List(
         endpoints,
@@ -22,14 +21,6 @@ def Compile_Endpoint_List(
         endpoint.append(array)
 
     return endpoint
-
-# # CONFIRMED
-# suffixes = ['endpoint1', 'endpoint2', 'endpoint3','endpoint4']
-# end_points_to_call = [[0,1],[2],[0,1,2],[1]]
-#
-# print('Compile Endpoint list below')
-# print(Compile_Endpoint_List(endpoints=suffixes,
-#                            apis_to_call=end_points_to_call))
 
 def Compile_Kwargs_list(
         keys,
@@ -73,14 +64,6 @@ def Kwargs_to_dict(
 ):
     return Kwargs_list_dict(Compile_Kwargs_list(keys, values, positions))
 
-# CONFIRMED
-# keys = ['key1','key2','key3']
-# values = ['value1','value2','value3']
-# position = [3,2,0]
-#
-# print('Kwargs Dict Below')
-# print(Kwargs_to_dict(keys, values, position))
-
 
 def Compile_Api_List(   # Create usable API list out of input info
         apis, # base api (always first in url generation)
@@ -94,7 +77,7 @@ def Compile_Api_List(   # Create usable API list out of input info
 
     api = []
     kwargs = []
-    
+
     if None not in [keys, values, positions] and (len(keys) == len(values) == len(positions)): # convert raw lists to the format [{position: key+value, ...}, {position: key+value, ...}, ... ]
         for i, item in enumerate(keys):
             # print(item)
@@ -111,27 +94,6 @@ def Compile_Api_List(   # Create usable API list out of input info
     return api
 
 
-#
-
-# CONFIRMED
-# apis = ['api1','api2','api3']
-# filters = [['1','2','3'],['1','2'],['2','3']]
-# limits = [5,10,20]
-# period = [60,100,30]
-# keys = [None,['api2 key 1', 'api2 key 2'], 'api3 key 1']
-# values = [None,['api2 value 1', 'api2 value 2'], 'api3 value 1']
-# positions = [None,[0, 1], 3]
-#
-# print('Compile Api List below')
-# print(Compile_Api_List(apis=apis,
-#                        filters=filters,
-#                        limits=limits,
-#                        periods=period,
-#                        keys = keys,
-#                        values=values,
-#                        positions=positions))
-
-
 def Create_URL(
         api,
         endpoint,
@@ -139,11 +101,9 @@ def Create_URL(
 ):
     url = [api[0]]
 
-    # print('api abo')
-
     if api[4] != None: # api[4] is the column containing additional {positions:key+value,} including auth keys
         kwargs = api[4]
-        # print(api[4])
+
         for i in range(len(kwargs)+1): # for number of additional values + 1 (since the total string will include the key+values and the endpoint
             try:
                 url.append(kwargs[i]) # append key+value that holds position i
@@ -154,8 +114,6 @@ def Create_URL(
         url = ''.join(url) # list -> string
     else:
         url=str(api[0])+str(endpoint)
-        # print(url)
-
 
     return url
 
@@ -272,10 +230,8 @@ async def json_extract(obj, key):
     values= await extract(obj, arr, key)
     return values
 
-import asyncio
-import aiohttp
-from aiohttp import ClientSession, ClientConnectorError
-import json
+
+
 
 async def fetch_html(url: str, session: ClientSession, id, **kwargs) -> list:
     try:
@@ -293,7 +249,7 @@ async def fetch_html(url: str, session: ClientSession, id, **kwargs) -> list:
 
     return [id, url, result[0]]
 
-import time
+
 
 
 
@@ -321,19 +277,6 @@ if __name__ == "__main__":
     assert sys.version_info >= (3, 7), "Script requires Python 3.7+."
     here = pathlib.Path(__file__).parent
 
-    # urls=['https://1.1.1.1/',
-    #       'http://automationpractice.com/',
-    #       'http://automationpractice.com/',
-    #       'http://automationpractice.com/',
-    #       'http://automationpractice.com/',
-    #       'http://automationpractice.com/',
-    #       'http://automationpractice.com/',
-    #       'http://automationpractice.com/']
-
-
-    # print(asyncio.run(make_requests(urls=urls)))
-    # print('lemony snicket just got a wicket!')
-    # print(asyncio.run(make_requests(urls=urls))[0])
 
 async def DOI_List_to_Result(
         endpoint_list,
@@ -376,10 +319,6 @@ async def DOI_List_to_Result(
 
     endpoint_list = Compile_Endpoint_List(endpoints=endpoint_list,
                                           apis_to_call=apis_to_call)
-    # while len(endpoint_list) > 0:
-    #     for i, endpoint in endpoint_list:
-    #         if check_api(api_list, endpoint[1][1]) == True:
-    #             url = Create_URL(api_list[endpoint[1][1]], endpoint[0])
 
     result = []
 
@@ -409,12 +348,6 @@ async def DOI_List_to_Result(
                         api_to_call[0]= 1
                     else:
                         break
-
-
-        # print(response)
-
-
-    print(result)
     
     return result
 
