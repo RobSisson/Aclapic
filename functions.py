@@ -12,12 +12,13 @@ def Compile_Endpoint_List(
     endpoint = []
 
     for i, e in enumerate(endpoints):
+        print(i)
 
         apis_to_call_temp = []
-        for i, api in enumerate(apis_to_call[i]):
+        for index, api in enumerate(apis_to_call[i]):
             apis_to_call_temp.append([0, api])
 
-        array = [e,apis_to_call_temp,None]
+        array = [e,apis_to_call_temp,None,i]
         endpoint.append(array)
 
     return endpoint
@@ -195,7 +196,7 @@ async def Create_Next_URLs(
             if (api_to_call[0]) == 0 and check == True:
                 api_number=api_to_call[1]  # this would be the number of the api to call, not the api itself
 
-                url_list.append(Create_URL(api_list[api_number], endpoint[0])) # append created url to list
+                url_list.append([Create_URL(api_list[api_number], endpoint[0]), endpoint[3]]) # append created url to list
 
                 # endpoint[1].remove(api_to_call) # once url is appended, remove the relevant api_to_call from the endpoint
 
@@ -249,19 +250,13 @@ async def fetch_html(url: str, session: ClientSession, id, **kwargs) -> list:
 
     return [id, url, result[0]]
 
-
-
-
-
-
-
 async def make_requests(urls: list, **kwargs):
 
     async with ClientSession() as session:
         tasks = []
         for i, url in enumerate(urls):
             tasks.append(
-                fetch_html(url=url, session=session, id=i, **kwargs)
+                fetch_html(url=url[0], session=session, id=url[1], **kwargs)
             )
         responses = await asyncio.gather(*tasks)
 
@@ -322,10 +317,12 @@ async def DOI_List_to_Result(
 
     result = []
 
-    loop = 0
 
-    while len(endpoint_list) > len(result):
-        loop +=1
+    while_loop = 0
+
+    while len(endpoint_list) > (len(result)):
+        while_loop +=1
+        print('while loop no ' +str(while_loop))
         print(len(endpoint_list) - len(result))
         url_list = await Create_Next_URLs(api_list, endpoint_list)
 
@@ -337,19 +334,57 @@ async def DOI_List_to_Result(
 
             print(item[0])
 
-            if item[2] not in [[], None, '']:
-                print('gogogo')
+            response_id = item[0]
+            # url_called = item[1]
+            filtered_result = item[2]
+
+            if filtered_result not in [[], None, '']:
+                print('Result found, appending...')
                 result.append(item)
-                for i, api_to_call in enumerate(endpoint_list[item[0]][1]):
-                    api_to_call[0]= 1
+                print('Preventing future api calls for this endpoint...')
+                for i, api_to_call in enumerate(endpoint_list[response_id][1]):
+                    if api_to_call[0] == 0:
+                        api_to_call[0] = 2 # Changing all remaining api's to call to value 2
             else:
-                for i, api_to_call in enumerate(endpoint_list[item[0]][1]):
-                    if i < loop:
-                        api_to_call[0]= 1
-                    else:
+                print('No result found for this endpoint, when calling this API')
+
+                for i, api_to_call in enumerate(endpoint_list[response_id][1]):
+                    if api_to_call[0] == 0:
+                        print('Preventing this api from being called again')
+                        api_to_call[0] = 1 # Changing previously called api value to 1
                         break
-    
-    return result
+
+                if while_loop == len(endpoint_list[response_id][1]):
+                    print('Appending to empty result...')
+                    result.append(item)
+
+
+
+
+
+                #
+                # for i, api_to_call in enumerate(endpoint_list[item[0]]):
+                #
+                #     print('weoweo ')
+                #     print(api_to_call)
+                #
+                #     if api_to_call[0] == 1:
+                #         ep_loop += 1
+                #
+                #     if i<=while_loop and api_to_call[0] == 0:
+                #         api_to_call[0] = 1
+                #         print(item)
+                #         print('item above')
+                #         result.append(item)
+                #
+                #     else:
+                #         print('break')
+                #         break
+
+    reordered = [[y,z] for x,y,z in sorted(result)]
+    # reordered = [reordered[i[0]] for i in result]
+
+    return reordered
 
 dois = ['10.1093/CJE/BEY045',
         '10.2307/2224288',
@@ -377,8 +412,6 @@ dois = ['10.1093/CJE/BEY045',
         '10.1080/09538259.2020.1837546',
         '10.1111/meca.12277',
         '10.1007/S00191-020-00680-W',]
-
-
 
 
 print(asyncio.run(DOI_List_to_Result(dois)))
